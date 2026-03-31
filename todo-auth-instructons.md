@@ -1,5 +1,7 @@
 # TODO-AUTH
 
+Todo App with Gin, PostgreSQL & JWT Auth
+[REST API for Beginners](https://www.youtube.com/watch?v=S069igHKUIw)
 30-03-2026
 
 Get framework for go

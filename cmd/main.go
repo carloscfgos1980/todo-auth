@@ -5,6 +5,7 @@ import (
 
 	"github.com/carloscfgos1980/todo-auth/internal/config"
 	"github.com/carloscfgos1980/todo-auth/internal/database"
+	"github.com/carloscfgos1980/todo-auth/internal/handlers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,5 +30,6 @@ func main() {
 			"database": "connected",
 		})
 	})
+	router.POST("/todos", handlers.CreateTodoHandler(pool))
 	router.Run(":" + cfg.Port)
 }

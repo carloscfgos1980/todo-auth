@@ -17,6 +17,11 @@ type CreateTodoRequest struct {
 	Completed bool   `json:"completed"`
 }
 
+type UpdateTodoRequest struct {
+	Title     *string `json:"title"`
+	Completed *bool   `json:"completed"`
+}
+
 // CreateTodoHandler returns a Gin handler function that processes requests to create a new todo item. It validates the incoming JSON payload, calls the repository function to create the todo in the database, and returns the created todo item in the response.
 func CreateTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 	// The returned handler function processes the incoming request to create a new todo item. It first attempts to bind the JSON payload to a CreateTodoRequest struct. If the binding fails (e.g., due to missing required fields), it responds with a 400 Bad Request status and an error message. If the binding is successful, it calls the CreateTodo function from the repositories package to insert the new todo into the database. If there is an error during this process, it logs the error and responds with a 500 Internal Server Error status. If the todo is created successfully, it responds with a 201 Created status and includes the created todo item in the response body.
@@ -50,7 +55,7 @@ func GetTodosHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 			return
 		}
 		// Return the list of todos in the response with a 200 OK status.
-		c.JSON(http.StatusOK, gin.H{"todos": todos})
+		c.JSON(http.StatusOK, todos)
 	}
 }
 
@@ -80,7 +85,7 @@ func GetTodoByIDHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 			return
 		}
 		// Return the retrieved todo item in the response with a 200 OK status.
-		c.JSON(http.StatusOK, gin.H{"todo": todo})
+		c.JSON(http.StatusOK, todo)
 	}
 }
 
@@ -96,23 +101,72 @@ func UpdateTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 		}
 
 		// Bind the incoming JSON payload to a CreateTodoRequest struct. This will validate that the required fields are present and correctly formatted. If the binding fails, return a 400 Bad Request response with the error message.
-		var req CreateTodoRequest
+		var req UpdateTodoRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
+		if req.Title == nil && req.Completed == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "At least one field (title or completed) must be provided"})
+			return
+		}
+
+		existingTodo, err := repositories.GetTodoByID(pool, id)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+				return
+			}
+			log.Printf("GetTodoByID error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		title := existingTodo.Title
+		if req.Title != nil {
+			title = *req.Title
+		}
+
+		completed := existingTodo.Completed
+		if req.Completed != nil {
+			completed = *req.Completed
+		}
+
 		// Call the UpdateTodo function from the repositories package to update the existing todo item in the database using the provided ID, title, and completion status. If there is an error during this process, log the error and return a 500 Internal Server Error response with an appropriate error message. If the todo item is not found (i.e., the repository function returns nil), return a 404 Not Found response with an error message indicating that the todo item was not found. If the todo item is updated successfully, return a 200 OK response with the updated todo item in the response body.
-		todo, err := repositories.UpdateTodo(pool, id, req.Title, req.Completed)
+		todo, err := repositories.UpdateTodo(pool, id, title, completed)
 		if err != nil {
 			if err == pgx.ErrNoRows {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
 				return
 			}
 			log.Printf("UpdateTodo error: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update todo"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"todo": todo})
+		c.JSON(http.StatusOK, todo)
+	}
+}
+
+func DeleteTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			return
+		}
+
+		err = repositories.DeleteTodo(pool, id)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+				return
+			}
+			log.Printf("DeleteTodo error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
 	}
 }

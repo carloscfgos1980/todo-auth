@@ -121,3 +121,15 @@ func UpdateTodo(pool *pgxpool.Pool, id int, title string, completed bool) (*mode
 	}
 	return &todo, nil
 }
+
+func DeleteTodo(pool *pgxpool.Pool, id int) error {
+	// Set a timeout for the database query to prevent hanging connections
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	query := `
+		DELETE FROM todos
+		WHERE id = $1
+	`
+	_, err := pool.Exec(ctx, query, id)
+	return err
+}

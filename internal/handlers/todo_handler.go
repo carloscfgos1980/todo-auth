@@ -148,6 +148,7 @@ func UpdateTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 	}
 }
 
+// DeleteTodoHandler returns a Gin handler function that processes requests to delete a specific todo item by its ID. It extracts the ID from the URL parameters, validates it, and calls the repository function to delete the todo from the database. If the ID is invalid, it responds with a 400 Bad Request status. If there is an error during the deletion process, it logs the error and responds with a 500 Internal Server Error status. If the todo is not found, it responds with a 404 Not Found status. If the todo is deleted successfully, it returns a 200 OK response with a success message in the response body.
 func DeleteTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		idStr := c.Param("id")
@@ -156,10 +157,10 @@ func DeleteTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 			return
 		}
-
+		// Call the DeleteTodo function from the repositories package to delete the specified todo item from the database using the provided ID. If there is an error during this process, log the error and return a 500 Internal Server Error response with an appropriate error message. If the todo item is not found (i.e., the repository function returns an error indicating that the item was not found), return a 404 Not Found response with an error message indicating that the todo item was not found. If the todo item is deleted successfully, return a 200 OK response with a success message in the response body.
 		err = repositories.DeleteTodo(pool, id)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if err.Error() == "todo with id "+idStr+" not found" {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
 				return
 			}

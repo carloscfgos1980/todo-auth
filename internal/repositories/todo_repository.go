@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/carloscfgos1980/todo-auth/internal/models"
@@ -130,6 +131,13 @@ func DeleteTodo(pool *pgxpool.Pool, id int) error {
 		DELETE FROM todos
 		WHERE id = $1
 	`
-	_, err := pool.Exec(ctx, query, id)
-	return err
+	commandTag, err := pool.Exec(ctx, query, id)
+
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("todo with id %d not found", id)
+	}
+	return nil
 }

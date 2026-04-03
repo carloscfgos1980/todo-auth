@@ -16,8 +16,8 @@ func CreateTodo(pool *pgxpool.Pool, title string, completed bool) (*models.Todo,
 	defer cancel()
 	// SQL query to insert a new todo and return the created record
 	var query string = `
-	INSERT INTO todos (title, completed, created_at, updated_at) 
-	VALUES ($1, $2, NOW(), NOW()) 
+	INSERT INTO todos (title, completed) 
+	VALUES ($1, $2) 
 	RETURNING id, title, completed, created_at, updated_at`
 	// Execute the query and scan the returned record into a Todo model
 	var todo models.Todo
@@ -123,6 +123,7 @@ func UpdateTodo(pool *pgxpool.Pool, id int, title string, completed bool) (*mode
 	return &todo, nil
 }
 
+// DeleteTodo deletes a specific todo from the database by its ID. If the todo is not found, it returns an error indicating that the todo with the specified ID was not found. If the deletion is successful, it returns nil.
 func DeleteTodo(pool *pgxpool.Pool, id int) error {
 	// Set a timeout for the database query to prevent hanging connections
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -131,11 +132,12 @@ func DeleteTodo(pool *pgxpool.Pool, id int) error {
 		DELETE FROM todos
 		WHERE id = $1
 	`
+	// Execute the query and check the number of rows affected to determine if the todo was found and deleted
 	commandTag, err := pool.Exec(ctx, query, id)
-
 	if err != nil {
 		return err
 	}
+	// If no rows were affected, it means the todo with the specified ID was not found
 	if commandTag.RowsAffected() == 0 {
 		return fmt.Errorf("todo with id %d not found", id)
 	}

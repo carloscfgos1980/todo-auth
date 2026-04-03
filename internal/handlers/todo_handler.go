@@ -40,7 +40,7 @@ func CreateTodoHandler(pool *pgxpool.Pool) gin.HandlerFunc {
 			return
 		}
 		// Return the created todo item in the response with a 201 Created status.
-		c.JSON(http.StatusCreated, gin.H{"todo": todo})
+		c.JSON(http.StatusCreated, todo)
 	}
 }
 

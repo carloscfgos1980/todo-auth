@@ -6,6 +6,7 @@ import (
 	"github.com/carloscfgos1980/todo-auth/internal/config"
 	"github.com/carloscfgos1980/todo-auth/internal/database"
 	"github.com/carloscfgos1980/todo-auth/internal/handlers"
+	"github.com/carloscfgos1980/todo-auth/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,5 +39,7 @@ func main() {
 
 	router.POST("/auth/register", handlers.CreateUserHandler(pool))
 	router.POST("/auth/login", handlers.LoginHandler(pool, cfg))
+
+	router.GET("/protected-test", middleware.AuthMiddleware(cfg), handlers.TestProtectedHandler())
 	router.Run(":" + cfg.Port)
 }

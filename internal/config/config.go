@@ -15,6 +15,7 @@ var (
 type Config struct {
 	DatabaseURL string
 	Port        string
+	JWTSecret   string
 }
 
 func LoadConfig() (*Config, error) {
@@ -29,8 +30,14 @@ func LoadConfig() (*Config, error) {
 		return nil, ErrMissingPort
 	}
 
+	JWTSecret := os.Getenv("JWT_SECRET")
+	if JWTSecret == "" {
+		return nil, errors.New("missing JWT secret")
+	}
+
 	return &Config{
 		DatabaseURL: DatabaseURL,
 		Port:        Port,
+		JWTSecret:   JWTSecret,
 	}, nil
 }

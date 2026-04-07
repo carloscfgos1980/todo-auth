@@ -35,6 +35,7 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.New("missing JWT secret")
 	}
 
+	// Return the configuration struct with the loaded values
 	return &Config{
 		DatabaseURL: DatabaseURL,
 		Port:        Port,

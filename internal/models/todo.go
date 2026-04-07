@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// Todo represents a task or item in a to-do list, with fields for ID, title, user ID, completion status, and timestamps for creation and updates. The struct tags specify how the fields should be serialized to JSON and mapped to database columns.
 type Todo struct {
 	ID        int       `json:"id" db:"id"`
 	Title     string    `json:"title" db:"title"`

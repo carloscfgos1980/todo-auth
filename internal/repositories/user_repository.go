@@ -59,6 +59,7 @@ func GetUserByEmail(pool *pgxpool.Pool, email string) (*models.User, error) {
 	return &user, nil
 }
 
+// GetUserByID retrieves a user from the database by their unique ID. If a user with the specified ID is found, it returns the user; otherwise, it returns an error indicating that the user was not found.
 func GetUserByID(pool *pgxpool.Pool, id string) (*models.User, error) {
 	// Set a timeout for the database query to prevent hanging connections
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

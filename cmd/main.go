@@ -32,6 +32,7 @@ func main() {
 
 	// Initialize the Gin router
 	var router *gin.Engine = gin.Default()
+	// Create a new MetricsCollector instance and register the metrics middleware to collect metrics for each incoming HTTP request. The metrics will include total requests, total latency, requests by route, and requests by status code. The metrics will be collected in a thread-safe manner using atomic operations and a sync.Map to store the counts for each route and status code.
 	metrics := middleware.NewMetricsCollector()
 	router.Use(metrics.Middleware())
 
@@ -46,6 +47,7 @@ func main() {
 			"database": "connected",
 		})
 	})
+	// Register the /metrics endpoint to return the collected metrics as a JSON response when accessed. This endpoint will allow monitoring tools to scrape the metrics for analysis and visualization.
 	router.GET("/metrics", metrics.Handler())
 	// Register user-related routes
 	router.POST("/auth/register", handlers.CreateUserHandler(cfg))

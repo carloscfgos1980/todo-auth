@@ -287,3 +287,25 @@ go test ./internal/handlers -run TestDeleteTodoRoute_Success -v
 * Common Issues
 
 ## 17. Add metrics
+
+metrics_middleware
+
+1. MetricsCollector is a struct that collects metrics for HTTP requests, including total requests, total latency in milliseconds, requests by route, and requests by status code. It uses a mutex to ensure thread-safe access to the metrics data.
+2. NewMetricsCollector creates and returns a new instance of MetricsCollector with initialized fields.
+3. Middleware is a Gin middleware function that collects metrics for each incoming HTTP request. It records the start time of the request, processes the request, and then calculates the latency and updates the metrics for total requests, total latency, requests by route, and requests by status code. It uses the request method and route as the key for tracking requests by route, and the response status code for tracking requests by status code. If the route is not matched, it uses "unmatched" as the key for tracking requests by route.
+3.1 Return a Gin handler function that will be called for each incoming HTTP request. This function will record the start time of the request, process the request, and then calculate the latency and update the metrics accordingly.
+3.2 Record the start time of the request to calculate latency later.
+3.3 Process the request by calling the next handler in the chain.
+3.4 Get the full path of the route that was matched for the request. If no route was matched, use "unmatched" as the key for tracking requests by route.
+3.5 Create a key for tracking requests by route using the request method and route. Get the response status code and calculate the latency in milliseconds. Then, update the total requests, total latency, requests by route, and requests by status code metrics using atomic operations and a helper function to increment the counters in the sync.Map.
+4. Handler is a Gin handler function that returns the collected metrics as a JSON response. It calculates the total requests, average latency, requests by route, and requests by status code, and sends this information in the response.
+4.1 Return a Gin handler function that will be called when the /metrics endpoint is accessed. This function will gather the collected metrics and return them as a JSON response.
+4.2 Load the total requests and total latency metrics using atomic operations. Then, iterate over the byRoute and byStatus sync.Maps to gather the counts for each route and status code. Finally, calculate the average latency and return all the metrics in a JSON response.
+4.3 Create maps to hold the counts for requests by route and requests by status code. Use the Range method of sync.Map to iterate over the entries in byRoute and byStatus, and load the counts using atomic operations.
+4.4 Create a map to hold the counts for requests by status code. Use the Range method of sync.Map to iterate over the entries in byStatus, and load the counts using atomic operations.
+4.5 Calculate the average latency in milliseconds by dividing the total latency by the total number of requests. If there are no requests, set the average latency to 0 to avoid division by zero.
+4.6 Return the collected metrics in a JSON response with fields for total requests, average latency, requests by route, and requests by status code.
+5. incrementCounter is a helper function that increments the counter for a given key in a sync.Map. It uses the LoadOrStore method to get or create an atomic.Uint64 counter for the key, and then increments the counter using the Add method.
+main.go
+6. Create a new MetricsCollector instance and register the metrics middleware to collect metrics for each incoming HTTP request. The metrics will include total requests, total latency, requests by route, and requests by status code. The metrics will be collected in a thread-safe manner using atomic operations and a sync.Map to store the counts for each route and status code.
+7. Register the /metrics endpoint to return the collected metrics as a JSON response when accessed. This endpoint will allow monitoring tools to scrape the metrics for analysis and visualization.

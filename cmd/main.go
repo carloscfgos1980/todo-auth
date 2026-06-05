@@ -7,6 +7,7 @@ import (
 	"github.com/carloscfgos1980/todo-auth/internal/config"
 	"github.com/carloscfgos1980/todo-auth/internal/database"
 	"github.com/carloscfgos1980/todo-auth/internal/handlers"
+	"github.com/carloscfgos1980/todo-auth/internal/middleware"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
@@ -46,6 +47,11 @@ func main() {
 	// Register user-related routes
 	router.POST("/auth/register", handlers.CreateUserHandler(cfg))
 	router.POST("/auth/login", handlers.LoginUserHandler(cfg))
+
+	// Register todo-related routes
+	todoRoutes := router.Group("/todos")
+	todoRoutes.Use(middleware.AuthMiddleware(cfg))
+	todoRoutes.POST("/", handlers.CreateTodoHandler(cfg))
 
 	// Start the server on the specified port
 	if err := router.Run(":" + cfg.Port); err != nil {

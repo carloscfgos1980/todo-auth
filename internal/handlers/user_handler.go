@@ -120,7 +120,6 @@ func LoginUserHandler(cfg *config.Config) gin.HandlerFunc {
 		response := response{
 			Token: token,
 		}
-
 		// Send the response back to the client with a 200 OK status
 		c.JSON(http.StatusOK, response)
 	}

@@ -75,3 +75,20 @@ git push origin gin_framework
 3.9 Send the response back to the client with a 200 OK status
 4. Register user-related routes
  router.POST("/auth/login", handlers.LoginUserHandler(cfg))
+
+## 4. Create Todo
+
+1. Create querie to insert values into todos table
+2. run "sqlc generate" to convert SQL to GO
+3. Copy middleware folder form previos version
+4. responseTodo represents the structure of a todo item that will be sent back in the response. It includes the ID, user ID, title, and completion status of the todo item.
+5. CreateTodoHandler handles the creation of a new todo item. It retrieves the user ID from the context, binds the incoming JSON payload to a CreateTodoRequest struct, and calls the CreateTodo method from the database layer to insert the new todo item into the database. If successful, it returns the created todo item in the response; otherwise, it returns an appropriate error message.
+5.1 returns a Gin handler function that processes the creation of a new todo item.
+5.2 Bind the incoming JSON payload to a CreateTodoRequest struct. If there is an error during binding (e.g., missing required fields), return a bad request error response.
+5.3 Call the CreateTodo method from the database layer, passing the user ID, title, and completion status from the request. If there is an error during the database operation, return an internal server error response. If successful, construct a responseTodo struct with the created todo item and return it in the response.
+5.4 Construct a responseTodo struct with the created todo item and return it in the response.
+5.5 Return the created todo item in the response with a status of 200 OK.
+6.Register todo-related routes
+ todoRoutes := router.Group("/todos")
+ todoRoutes.Use(middleware.AuthMiddleware(cfg))
+ todoRoutes.POST("/", handlers.CreateTodoHandler(cfg))

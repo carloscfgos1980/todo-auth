@@ -194,3 +194,17 @@ git push origin gin_framework
 7. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
 8. Define a struct to unmarshal the JSON response payload, which contains fields for ID, user_id, title, and completed status of the created todo.
 9. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the fields in the response match the expected values for the created todo, including the ID, user ID, title, and completed status. Finally, assert that all expectations set on the mock database were met.
+
+## Integration test get TODOS
+
+1. Set Gin to test mode to avoid unnecessary output during testing
+2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
+3. Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+4. Create a new Gin router and register the GetTodosHandler for the /todos/ route, applying AuthMiddleware
+5. Set up the expected database interactions for the GetTodosHandler. When the handler executes a SELECT query to retrieve todos by user ID, it will return multiple rows with the todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. To simulate an authenticated request, we generate a JWT token for a test user ID using the provided JWT secret and a short expiration time.
+6. Create a new HTTP GET request to the /todos/ route. Set the Authorization header with the Bearer token for authentication.
+7. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
+8. Define a struct to unmarshal the JSON response payload, which contains a slice of todo objects with fields for ID, user_id, title, and completed status.
+9. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the fields in the response match the expected values for the retrieved todos, including the ID, user ID, title, and completed status for each todo. Finally, assert that all expectations set on the mock database were met.
+10. Assert that the length of the payload is 2, indicating that two todos were returned in the response.
+11. Assert the fields of the first todo in the response match the expected values for the first todo in the database, including the ID, user ID, title, and completed status.

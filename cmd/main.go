@@ -55,6 +55,7 @@ func main() {
 	todoRoutes.GET("/", handlers.GetTodosHandler(cfg))
 	todoRoutes.GET("/:id", handlers.GetTodoByIDHandler(cfg))
 	todoRoutes.PUT("/:id", handlers.UpdateTodoHandler(cfg))
+	todoRoutes.DELETE("/:id", handlers.DeleteTodoHandler(cfg))
 
 	// Start the server on the specified port
 	if err := router.Run(":" + cfg.Port); err != nil {

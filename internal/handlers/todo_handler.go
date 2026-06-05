@@ -144,6 +144,7 @@ func GetTodoByIDHandler(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// UpdateTodoHandler handles the update of an existing todo item. It retrieves the user ID from the context, extracts the todo ID from the URL parameters, binds the incoming JSON payload to an UpdateTodoRequest struct, and calls the UpdateTodo method from the database layer to update the todo item in the database. If the todo item is found and belongs to the authenticated user, it returns the updated todo item in the response; otherwise, it returns an appropriate error message (e.g., not found, unauthorized, or forbidden).
 func UpdateTodoHandler(cfg *config.Config) gin.HandlerFunc {
 	// returns a Gin handler function that processes the update of an existing todo item.
 	return func(c *gin.Context) {
@@ -166,6 +167,7 @@ func UpdateTodoHandler(cfg *config.Config) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		// Call the GetTodoByID method from the database layer to fetch the existing todo item. If there is an error during the database operation, return an internal server error response. If the todo item is not found, return a not found error response. If the todo item is found but does not belong to the authenticated user, return a forbidden error response.
 		dbTodo, err := cfg.DB.GetTodoByID(c, int32(id))
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -180,6 +182,7 @@ func UpdateTodoHandler(cfg *config.Config) gin.HandlerFunc {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this todo"})
 			return
 		}
+		// Determine the updated title and completion status for the todo item. If the corresponding fields in the UpdateTodoRequest struct are nil, use the existing values from the database; otherwise, use the new values from the request.
 		title := dbTodo.Title
 		if req.Title != nil {
 			title = *req.Title
@@ -208,5 +211,44 @@ func UpdateTodoHandler(cfg *config.Config) gin.HandlerFunc {
 		// Return the updated todo item in the response with a status of 200 OK.
 		c.JSON(http.StatusOK, response)
 
+	}
+}
+
+func DeleteTodoHandler(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+		userID, exists := c.Get("userID")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+			return
+		}
+		// Extract the todo ID from the URL parameters and convert it to an integer. If there is an error during conversion (e.g., invalid ID format), return a bad request error response.
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			return
+		}
+		// Call the GetTodoByID method from the database layer to fetch the existing todo item. If there is an error during the database operation, return an internal server error response. If the todo item is not found, return a not found error response. If the todo item is found but does not belong to the authenticated user, return a forbidden error response.
+		dbTodo, err := cfg.DB.GetTodoByID(c, int32(id))
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if dbTodo.UserID != userID.(uuid.UUID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this todo"})
+			return
+		}
+		// Call the DeleteTodo method from the database layer, passing the todo ID. If there is an error during the database operation, return an internal server error response. If successful, return a success message in the response.
+		err = cfg.DB.DeleteTodo(c, int32(id))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
 	}
 }

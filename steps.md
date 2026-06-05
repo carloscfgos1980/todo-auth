@@ -139,3 +139,17 @@ git push origin gin_framework
 4.10 Return the updated todo item in the response with a status of 200 OK.
 5. Register todo-related routes
  todoRoutes.PUT("/:id", handlers.UpdateTodoHandler(cfg))
+
+## 8. Delete todo
+
+1. Create query to delete todo
+2. Run sqlc generate to convert SL to GO
+3. DeleteTodoHandler handles the deletion of a specific todo item by its ID. It retrieves the user ID from the context, extracts the todo ID from the URL parameters, and calls the DeleteTodo method from the database layer to delete the todo item. If the todo item is found and belongs to the authenticated user, it deletes the item and returns a success message in the response; otherwise, it returns an appropriate error message (e.g., not found, unauthorized, or forbidden).
+3.1 returns a Gin handler function that processes the deletion of a specific todo item by its ID.
+3.2 Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+3.3 Extract the todo ID from the URL parameters and convert it to an integer. If there is an error during conversion (e.g., invalid ID format), return a bad request error response.
+3.4 Call the GetTodoByID method from the database layer to fetch the existing todo item. If there is an error during the database operation, return an internal server error response. If the todo item is not found, return a not found error response. If the todo item is found but does not belong to the authenticated user, return a forbidden error response.
+3.5 Call the DeleteTodo method from the database layer, passing the todo ID. If there is an error during the database operation, return an internal server error response. If successful, return a success message in the response.
+3.6 Return a success message in the response with a status of 200 OK.
+3.7 Register todo-related routes
+ todoRoutes.DELETE("/:id", handlers.DeleteTodoHandler(cfg))

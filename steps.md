@@ -207,7 +207,7 @@ go test ./internal/handlers -run TestAuthLoginRoute_Success -v
 go test ./internal/handlers -run TestCreateTodoRoute_Success -v
 ```
 
-## Integration test get TODOS
+## 12. Integration test get TODOS
 
 1. Set Gin to test mode to avoid unnecessary output during testing
 2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
@@ -225,7 +225,7 @@ go test ./internal/handlers -run TestCreateTodoRoute_Success -v
 go test ./internal/handlers -run TestGetTodosRoute_Success -v
 ```
 
-## Integration test get todo by id
+## 13. Integration test get todo by id
 
 1. Set Gin to test mode to avoid unnecessary output during testing
 2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
@@ -241,7 +241,7 @@ go test ./internal/handlers -run TestGetTodosRoute_Success -v
 go test ./internal/handlers -run TestGetTodoByIDRoute_Success -v
 ```
 
-## integration test update todo
+## 14. integration test update todo
 
 1. Set Gin to test mode to avoid unnecessary output during testing
 2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
@@ -255,4 +255,19 @@ go test ./internal/handlers -run TestGetTodoByIDRoute_Success -v
 
 ```bash
 go test ./internal/handlers -run TestUpdateTodoRoute_Success -v
+```
+
+## 15. integration test delete todo
+
+1. Set Gin to test mode to avoid unnecessary output during testing
+2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
+3. Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+4. Create a new Gin router and register the DeleteTodoHandler for the /todos/:id route, applying AuthMiddleware
+5. Set up the expected database interactions for the DeleteTodoHandler. When the handler executes a SELECT query to retrieve the current todo by ID, it will return a row with the current todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. Then, when the handler executes a DELETE query to delete the todo by ID, it will return a result indicating that one row was affected. To simulate an authenticated request, we generate a JWT token for a test user ID using the provided JWT secret and a short expiration time.
+6. Create a new HTTP DELETE request to the /todos/1 route. Set the Authorization header with the Bearer token for authentication.
+7. Define a struct to unmarshal the JSON response payload, which contains a message field indicating the result of the delete operation.
+8. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the message in the response indicates that the todo was deleted successfully. Finally, assert that all expectations set on the mock database were met.
+
+```bash
+go test ./internal/handlers -run TestDeleteTodoRoute_Success -v
 ```

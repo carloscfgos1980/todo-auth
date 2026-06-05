@@ -259,3 +259,56 @@ func TestUpdateTodoRoute_Success(t *testing.T) {
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDeleteTodoRoute_Success(t *testing.T) {
+	// Set Gin to test mode to avoid unnecessary output during testing
+	gin.SetMode(gin.TestMode)
+	// Create a new sqlmock database connection and a mock object to set expectations on database interactions
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+	// Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+	jwtSecret := "test-secret"
+	cfg := &config.Config{
+		DB:        database.New(db),
+		JWTSecret: jwtSecret,
+	}
+	// Create a new Gin router and register the DeleteTodoHandler for the /todos/:id route, applying AuthMiddleware
+	router := gin.New()
+	todoRoutes := router.Group("/todos")
+	todoRoutes.Use(middleware.AuthMiddleware(cfg))
+	todoRoutes.DELETE("/:id", DeleteTodoHandler(cfg))
+	// Set up the expected database interactions for the DeleteTodoHandler. When the handler executes a SELECT query to retrieve the current todo by ID, it will return a row with the current todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. Then, when the handler executes a DELETE query to delete the todo by ID, it will return a result indicating that one row was affected. To simulate an authenticated request, we generate a JWT token for a test user ID using the provided JWT secret and a short expiration time.
+	userID := uuid.New()
+	token, err := utils.MakeJWT(userID, jwtSecret, time.Hour)
+	require.NoError(t, err)
+
+	now := time.Now().UTC()
+	rows := sqlmock.NewRows([]string{"id", "title", "created_at", "updated_at", "completed", "user_id"}).
+		AddRow(int32(1), "Buy milk", now, now, false, userID)
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, title, created_at, updated_at, completed, user_id FROM todos WHERE id = $1")).
+		WithArgs(int32(1)).
+		WillReturnRows(rows)
+
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM todos WHERE id = $1")).
+		WithArgs(int32(1)).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	// Create a new HTTP DELETE request to the /todos/1 route. Set the Authorization header with the Bearer token for authentication.
+	req := httptest.NewRequest(http.MethodDelete, "/todos/1", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
+
+	require.Equal(t, http.StatusOK, res.Code, "response body: %s", res.Body.String())
+	// Define a struct to unmarshal the JSON response payload, which contains a message field indicating the result of the delete operation.
+	var payload struct {
+		Message string `json:"message"`
+	}
+	// Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the message in the response indicates that the todo was deleted successfully. Finally, assert that all expectations set on the mock database were met.
+	require.NoError(t, json.Unmarshal(res.Body.Bytes(), &payload))
+	assert.Equal(t, "Todo deleted successfully", payload.Message)
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}

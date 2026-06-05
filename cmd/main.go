@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/carloscfgos1980/todo-auth/internal/config"
+	"github.com/carloscfgos1980/todo-auth/internal/database"
+	"github.com/carloscfgos1980/todo-auth/internal/handlers"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
@@ -22,6 +24,11 @@ func main() {
 		log.Fatalf("Error opening database: %s", err)
 	}
 	defer dbConn.Close()
+	// Create a new database queries instance
+	db := database.New(dbConn)
+	// Assign the database queries instance to the configuration struct for use in handlers
+	cfg.DB = db
+
 	// Initialize the Gin router
 	var router *gin.Engine = gin.Default()
 
@@ -36,6 +43,8 @@ func main() {
 			"database": "connected",
 		})
 	})
+	// Register user-related routes
+	router.POST("/auth/register", handlers.CreateUserHandler(cfg))
 	// Start the server on the specified port
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("Error starting server: %v", err)

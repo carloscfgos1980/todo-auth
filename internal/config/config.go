@@ -4,15 +4,18 @@ import (
 	"errors"
 	"os"
 
+	"github.com/carloscfgos1980/todo-auth/internal/database"
 	"github.com/joho/godotenv"
 )
 
 var (
 	ErrMissingDatabaseURL = errors.New("missing database URL")
 	ErrMissingPort        = errors.New("missing port")
+	ErrMissingJWT         = errors.New("missing JWT secret")
 )
 
 type Config struct {
+	DB          *database.Queries
 	DatabaseURL string
 	Port        string
 	JWTSecret   string
@@ -34,7 +37,7 @@ func LoadConfig() (*Config, error) {
 
 	JWTSecret := os.Getenv("JWT_SECRET")
 	if JWTSecret == "" {
-		return nil, errors.New("missing JWT secret")
+		return nil, ErrMissingJWT
 	}
 
 	// Return the configuration struct with the loaded values

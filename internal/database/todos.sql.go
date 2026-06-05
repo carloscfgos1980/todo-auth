@@ -42,3 +42,37 @@ func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, e
 	)
 	return i, err
 }
+
+const getTodosByUserID = `-- name: GetTodosByUserID :many
+SELECT id, title, created_at, updated_at, completed, user_id FROM todos WHERE user_id = $1
+`
+
+func (q *Queries) GetTodosByUserID(ctx context.Context, userID uuid.UUID) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, getTodosByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Completed,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

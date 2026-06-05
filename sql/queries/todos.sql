@@ -8,3 +8,6 @@ VALUES (
     $3
 )
 RETURNING *;
+
+-- name: GetTodosByUserID :many
+SELECT * FROM todos WHERE user_id = $1;

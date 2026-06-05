@@ -92,3 +92,16 @@ git push origin gin_framework
  todoRoutes := router.Group("/todos")
  todoRoutes.Use(middleware.AuthMiddleware(cfg))
  todoRoutes.POST("/", handlers.CreateTodoHandler(cfg))
+
+## 5. Get todos
+
+1. Create querie to get todos by user is
+2. run "sqlc generate" to convert SQL to GO
+3. GetTodosHandler handles the retrieval of all todo items for a specific user. It retrieves the user ID from the context, calls the GetTodosByUserID method from the database layer to fetch the todo items associated with that user, and returns the list of todo items in the response. If there is an error during the process, it returns an appropriate error message.
+3.1 returns a Gin handler function that processes the retrieval of all todo items for a specific user.
+3.2 Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+3.3 Call the GetTodosByUserID method from the database layer, passing the user ID to fetch the todo items associated with that user. If there is an error during the database operation, return an internal server error response. If successful, construct a slice of responseTodo structs with the retrieved todo items and return it in the response.
+3.4 Construct a slice of responseTodo structs with the retrieved todo items and return it in the response.
+3.5 Return the list of todo items in the response with a status of 200 OK.
+4. Register todo-related routes
+ todoRoutes.GET("/", handlers.GetTodosHandler(cfg))

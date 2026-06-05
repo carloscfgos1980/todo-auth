@@ -66,3 +66,32 @@ func CreateTodoHandler(cfg *config.Config) gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+// GetTodosHandler handles the retrieval of all todo items for a specific user. It retrieves the user ID from the context, calls the GetTodosByUserID method from the database layer to fetch the todo items associated with that user, and returns the list of todo items in the response. If there is an error during the process, it returns an appropriate error message.
+func GetTodosHandler(cfg *config.Config) gin.HandlerFunc {
+	// returns a Gin handler function that processes the retrieval of all todo items for a specific user.
+	return func(c *gin.Context) {
+		// Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+		userID, exists := c.Get("userID")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+			return
+		}
+		// Call the GetTodosByUserID method from the database layer, passing the user ID to fetch the todo items associated with that user. If there is an error during the database operation, return an internal server error response. If successful, construct a slice of responseTodo structs with the retrieved todo items and return it in the response.
+		todos, err := cfg.DB.GetTodosByUserID(c, userID.(uuid.UUID))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		var response []responseTodo
+		for _, todo := range todos {
+			response = append(response, responseTodo{
+				ID:        todo.ID,
+				UserID:    todo.UserID,
+				Title:     todo.Title,
+				Completed: todo.Completed,
+			})
+		}
+		c.JSON(http.StatusOK, response)
+	}
+}

@@ -271,3 +271,19 @@ go test ./internal/handlers -run TestUpdateTodoRoute_Success -v
 ```bash
 go test ./internal/handlers -run TestDeleteTodoRoute_Success -v
 ```
+
+## 16. Add README
+
+* Features
+* Tech Stack
+* Project Structure
+* Prerequisites
+* Environment Variables
+* Database Setup
+* Run the API
+* API Endpoints
+* Tests
+* Contributing
+* Common Issues
+
+## 17. Add metrics

@@ -32,6 +32,8 @@ func main() {
 
 	// Initialize the Gin router
 	var router *gin.Engine = gin.Default()
+	metrics := middleware.NewMetricsCollector()
+	router.Use(metrics.Middleware())
 
 	// Set trusted proxies to nil to avoid warnings in Gin 1.7+
 	router.SetTrustedProxies(nil)
@@ -44,6 +46,7 @@ func main() {
 			"database": "connected",
 		})
 	})
+	router.GET("/metrics", metrics.Handler())
 	// Register user-related routes
 	router.POST("/auth/register", handlers.CreateUserHandler(cfg))
 	router.POST("/auth/login", handlers.LoginUserHandler(cfg))

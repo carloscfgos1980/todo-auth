@@ -240,3 +240,19 @@ go test ./internal/handlers -run TestGetTodosRoute_Success -v
 ```bash
 go test ./internal/handlers -run TestGetTodoByIDRoute_Success -v
 ```
+
+## integration test update todo
+
+1. Set Gin to test mode to avoid unnecessary output during testing
+2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
+3. Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+4. Create a new Gin router and register the UpdateTodoHandler for the /todos/:id route, applying AuthMiddleware
+5. Set up the expected database interactions for the UpdateTodoHandler. When the handler executes a SELECT query to retrieve the current todo by ID, it will return a row with the current todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. Then, when the handler executes an UPDATE query to update the todo with the specified title and completed status, it will return a row with the updated todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. To simulate an authenticated request, we generate a JWT token for a test user ID using the provided JWT secret and a short expiration time.
+6. Create a new HTTP PUT request to the /todos/1 route with a JSON payload containing the updated title and completed status for the todo. Set the Content-Type header to application/json and include the Authorization header with the Bearer token for authentication.
+7. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
+8. Define a struct to unmarshal the JSON response payload, which contains fields for ID, user_id, title, and completed status of the updated todo.
+9. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the fields in the response match the expected values for the updated todo, including the ID, user ID, title, and completed status. Finally, assert that all expectations set on the mock database were met.
+
+```bash
+go test ./internal/handlers -run TestUpdateTodoRoute_Success -v
+```

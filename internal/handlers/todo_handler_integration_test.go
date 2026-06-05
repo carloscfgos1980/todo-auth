@@ -195,3 +195,67 @@ func TestGetTodoByIDRoute_Success(t *testing.T) {
 
 	require.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestUpdateTodoRoute_Success(t *testing.T) {
+	// Set Gin to test mode to avoid unnecessary output during testing
+	gin.SetMode(gin.TestMode)
+	// Create a new sqlmock database connection and a mock object to set expectations on database interactions
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer db.Close()
+	// Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+	jwtSecret := "test-secret"
+	cfg := &config.Config{
+		DB:        database.New(db),
+		JWTSecret: jwtSecret,
+	}
+	// Create a new Gin router and register the UpdateTodoHandler for the /todos/:id route, applying AuthMiddleware
+	router := gin.New()
+	todoRoutes := router.Group("/todos")
+	todoRoutes.Use(middleware.AuthMiddleware(cfg))
+	todoRoutes.PUT("/:id", UpdateTodoHandler(cfg))
+	// Set up the expected database interactions for the UpdateTodoHandler. When the handler executes a SELECT query to retrieve the current todo by ID, it will return a row with the current todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. Then, when the handler executes an UPDATE query to update the todo with the specified title and completed status, it will return a row with the updated todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. To simulate an authenticated request, we generate a JWT token for a test user ID using the provided JWT secret and a short expiration time.
+	userID := uuid.New()
+	token, err := utils.MakeJWT(userID, jwtSecret, time.Hour)
+	require.NoError(t, err)
+
+	now := time.Now().UTC()
+	currentTodoRows := sqlmock.NewRows([]string{"id", "title", "created_at", "updated_at", "completed", "user_id"}).
+		AddRow(int32(1), "Buy milk", now, now, false, userID)
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, title, created_at, updated_at, completed, user_id FROM todos WHERE id = $1")).
+		WithArgs(int32(1)).
+		WillReturnRows(currentTodoRows)
+
+	updatedTodoRows := sqlmock.NewRows([]string{"id", "title", "created_at", "updated_at", "completed", "user_id"}).
+		AddRow(int32(1), "Buy bread", now, now, true, userID)
+
+	mock.ExpectQuery(regexp.QuoteMeta("UPDATE todos")).
+		WithArgs("Buy bread", true, int32(1)).
+		WillReturnRows(updatedTodoRows)
+	// Create a new HTTP PUT request to the /todos/1 route with a JSON payload containing the updated title and completed status for the todo. Set the Content-Type header to application/json and include the Authorization header with the Bearer token for authentication.
+	body := []byte(`{"title":"Buy bread","completed":true}`)
+	req := httptest.NewRequest(http.MethodPut, "/todos/1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res := httptest.NewRecorder()
+	router.ServeHTTP(res, req)
+	// Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
+	require.Equal(t, http.StatusOK, res.Code, "response body: %s", res.Body.String())
+	// Define a struct to unmarshal the JSON response payload, which contains fields for ID, user_id, title, and completed status of the updated todo.
+	var payload struct {
+		ID        int32  `json:"id"`
+		UserID    string `json:"user_id"`
+		Title     string `json:"title"`
+		Completed bool   `json:"completed"`
+	}
+	// Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the fields in the response match the expected values for the updated todo, including the ID, user ID, title, and completed status. Finally, assert that all expectations set on the mock database were met.
+	require.NoError(t, json.Unmarshal(res.Body.Bytes(), &payload))
+	assert.Equal(t, int32(1), payload.ID)
+	assert.Equal(t, userID.String(), payload.UserID)
+	assert.Equal(t, "Buy bread", payload.Title)
+	assert.True(t, payload.Completed)
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}

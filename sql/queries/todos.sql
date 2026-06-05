@@ -11,3 +11,6 @@ RETURNING *;
 
 -- name: GetTodosByUserID :many
 SELECT * FROM todos WHERE user_id = $1;
+
+-- name: GetTodoByID :one
+SELECT * FROM todos WHERE id = $1;

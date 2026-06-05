@@ -43,6 +43,24 @@ func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, e
 	return i, err
 }
 
+const getTodoByID = `-- name: GetTodoByID :one
+SELECT id, title, created_at, updated_at, completed, user_id FROM todos WHERE id = $1
+`
+
+func (q *Queries) GetTodoByID(ctx context.Context, id int32) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, getTodoByID, id)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Completed,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const getTodosByUserID = `-- name: GetTodosByUserID :many
 SELECT id, title, created_at, updated_at, completed, user_id FROM todos WHERE user_id = $1
 `

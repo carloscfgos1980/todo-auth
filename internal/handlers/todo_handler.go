@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
+	"strconv"
 
 	"github.com/carloscfgos1980/todo-auth/internal/config"
 	"github.com/carloscfgos1980/todo-auth/internal/database"
@@ -83,6 +85,7 @@ func GetTodosHandler(cfg *config.Config) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		// Construct a slice of responseTodo structs with the retrieved todo items and return it in the response.
 		var response []responseTodo
 		for _, todo := range todos {
 			response = append(response, responseTodo{
@@ -92,6 +95,51 @@ func GetTodosHandler(cfg *config.Config) gin.HandlerFunc {
 				Completed: todo.Completed,
 			})
 		}
+		// Return the list of todo items in the response with a status of 200 OK.
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+// GetTodoByIDHandler handles the retrieval of a specific todo item by its ID. It retrieves the user ID from the context, extracts the todo ID from the URL parameters, and calls the GetTodoByID method from the database layer to fetch the todo item. If the todo item is found and belongs to the authenticated user, it returns the todo item in the response; otherwise, it returns an appropriate error message (e.g., not found, unauthorized, or forbidden).
+func GetTodoByIDHandler(cfg *config.Config) gin.HandlerFunc {
+	// returns a Gin handler function that processes the retrieval of a specific todo item by its ID.
+	return func(c *gin.Context) {
+		// Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+		userID, exists := c.Get("userID")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+			return
+		}
+		// Extract the todo ID from the URL parameters and convert it to an integer. If there is an error during conversion (e.g., invalid ID format), return a bad request error response.
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			return
+		}
+		// Call the GetTodoByID method from the database layer, passing the todo ID to fetch the specific todo item. If there is an error during the database operation, return an internal server error response. If the todo item is not found, return a not found error response. If the todo item is found but does not belong to the authenticated user, return a forbidden error response. If successful, construct a responseTodo struct with the retrieved todo item and return it in the response.
+		todo, err := cfg.DB.GetTodoByID(c, int32(id))
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Check if the retrieved todo item belongs to the authenticated user. If not, return a forbidden error response.
+		if todo.UserID != userID.(uuid.UUID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to access this todo"})
+			return
+		}
+		// Construct a responseTodo struct with the retrieved todo item and return it in the response.
+		response := responseTodo{
+			ID:        todo.ID,
+			UserID:    todo.UserID,
+			Title:     todo.Title,
+			Completed: todo.Completed,
+		}
+		// Return the retrieved todo item in the response with a status of 200 OK.
 		c.JSON(http.StatusOK, response)
 	}
 }

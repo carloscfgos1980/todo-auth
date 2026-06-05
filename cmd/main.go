@@ -53,6 +53,7 @@ func main() {
 	todoRoutes.Use(middleware.AuthMiddleware(cfg))
 	todoRoutes.POST("/", handlers.CreateTodoHandler(cfg))
 	todoRoutes.GET("/", handlers.GetTodosHandler(cfg))
+	todoRoutes.GET("/:id", handlers.GetTodoByIDHandler(cfg))
 
 	// Start the server on the specified port
 	if err := router.Run(":" + cfg.Port); err != nil {

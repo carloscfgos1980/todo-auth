@@ -76,7 +76,7 @@ git push origin gin_framework
 4. Register user-related routes
  router.POST("/auth/login", handlers.LoginUserHandler(cfg))
 
-## 4. Create Todo
+## 4. Create Todo - auth
 
 1. Create querie to insert values into todos table
 2. run "sqlc generate" to convert SQL to GO
@@ -93,7 +93,7 @@ git push origin gin_framework
  todoRoutes.Use(middleware.AuthMiddleware(cfg))
  todoRoutes.POST("/", handlers.CreateTodoHandler(cfg))
 
-## 5. Get todos
+## 5. Get todos - auth
 
 1. Create querie to get todos by user is
 2. run "sqlc generate" to convert SQL to GO
@@ -105,3 +105,18 @@ git push origin gin_framework
 3.5 Return the list of todo items in the response with a status of 200 OK.
 4. Register todo-related routes
  todoRoutes.GET("/", handlers.GetTodosHandler(cfg))
+
+## 6. Get a todo-auth
+
+1. Create querie to fetch todo by id
+2. Run sqlc generate
+3. GetTodoByIDHandler handles the retrieval of a specific todo item by its ID. It retrieves the user ID from the context, extracts the todo ID from the URL parameters, and calls the GetTodoByID method from the database layer to fetch the todo item. If the todo item is found and belongs to the authenticated user, it returns the todo item in the response; otherwise, it returns an appropriate error message (e.g., not found, unauthorized, or forbidden).
+3.1 returns a Gin handler function that processes the retrieval of a specific todo item by its ID.
+3.2 Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+3.3 Extract the todo ID from the URL parameters and convert it to an integer. If there is an error during conversion (e.g., invalid ID format), return a bad request error response.
+3.4 Call the GetTodoByID method from the database layer, passing the todo ID to fetch the specific todo item. If there is an error during the database operation, return an internal server error response. If the todo item is not found, return a not found error response. If the todo item is found but does not belong to the authenticated user, return a forbidden error response. If successful, construct a responseTodo struct with the retrieved todo item and return it in the response.
+3.5 Check if the retrieved todo item belongs to the authenticated user. If not, return a forbidden error response.
+3.6 Construct a responseTodo struct with the retrieved todo item and return it in the response.
+3.7 Return the retrieved todo item in the response with a status of 200 OK.
+4. Register todo-related routes
+ todoRoutes.GET("/:id", handlers.GetTodoByIDHandler(cfg))

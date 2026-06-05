@@ -120,3 +120,22 @@ git push origin gin_framework
 3.7 Return the retrieved todo item in the response with a status of 200 OK.
 4. Register todo-related routes
  todoRoutes.GET("/:id", handlers.GetTodoByIDHandler(cfg))
+
+## 7. Update todo
+
+1. Create querie to update todo by id
+2. Run sqlc generate
+3. UpdateTodoRequest represents the expected JSON payload for updating an existing todo item. It includes optional fields for the title and completion status, allowing for partial updates of the todo item.
+4. UpdateTodoHandler handles the update of an existing todo item. It retrieves the user ID from the context, extracts the todo ID from the URL parameters, binds the incoming JSON payload to an UpdateTodoRequest struct, and calls the UpdateTodo method from the database layer to update the todo item in the database. If the todo item is found and belongs to the authenticated user, it returns the updated todo item in the response; otherwise, it returns an appropriate error message (e.g., not found, unauthorized, or forbidden).
+4.1 returns a Gin handler function that processes the update of an existing todo item.
+4.2 Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+4.3 Extract the todo ID from the URL parameters and convert it to an integer. If there is an error during conversion (e.g., invalid ID format), return a bad request error response.
+4.4 Bind the incoming JSON payload to an UpdateTodoRequest struct. If there is an error during binding (e.g., invalid JSON format), return a bad request error response.
+4.5 Call the GetTodoByID method from the database layer to fetch the existing todo item. If there is an error during the database operation, return an internal server error response. If the todo item is not found, return a not found error response. If the todo item is found but does not belong to the authenticated user, return a forbidden error response.
+4.6 Check if the retrieved todo item belongs to the authenticated user. If not, return a forbidden error response.
+4.7 Determine the updated title and completion status for the todo item. If the corresponding fields in the UpdateTodoRequest struct are nil, use the existing values from the database; otherwise, use the new values from the request.
+4.8 Call the UpdateTodo method from the database layer, passing the todo ID, updated title, and completion status. If there is an error during the database operation, return an internal server error response. If successful, construct a responseTodo struct with the updated todo item and return it in the response.
+4.9 Construct a responseTodo struct with the updated todo item and return it in the response.
+4.10 Return the updated todo item in the response with a status of 200 OK.
+5. Register todo-related routes
+ todoRoutes.PUT("/:id", handlers.UpdateTodoHandler(cfg))

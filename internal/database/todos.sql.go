@@ -94,3 +94,30 @@ func (q *Queries) GetTodosByUserID(ctx context.Context, userID uuid.UUID) ([]Tod
 	}
 	return items, nil
 }
+
+const updateTodo = `-- name: UpdateTodo :one
+UPDATE todos
+SET title = $1, completed = $2, updated_at = NOW()
+WHERE id = $3
+RETURNING id, title, created_at, updated_at, completed, user_id
+`
+
+type UpdateTodoParams struct {
+	Title     string
+	Completed bool
+	ID        int32
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, updateTodo, arg.Title, arg.Completed, arg.ID)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Completed,
+		&i.UserID,
+	)
+	return i, err
+}

@@ -143,3 +143,70 @@ func GetTodoByIDHandler(cfg *config.Config) gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+func UpdateTodoHandler(cfg *config.Config) gin.HandlerFunc {
+	// returns a Gin handler function that processes the update of an existing todo item.
+	return func(c *gin.Context) {
+		// Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
+		userID, exists := c.Get("userID")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+			return
+		}
+		// Extract the todo ID from the URL parameters and convert it to an integer. If there is an error during conversion (e.g., invalid ID format), return a bad request error response.
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			return
+		}
+		// Bind the incoming JSON payload to an UpdateTodoRequest struct. If there is an error during binding (e.g., invalid JSON format), return a bad request error response.
+		var req UpdateTodoRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		dbTodo, err := cfg.DB.GetTodoByID(c, int32(id))
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Todo not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Check if the retrieved todo item belongs to the authenticated user. If not, return a forbidden error response.
+		if dbTodo.UserID != userID.(uuid.UUID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this todo"})
+			return
+		}
+		title := dbTodo.Title
+		if req.Title != nil {
+			title = *req.Title
+		}
+		completed := dbTodo.Completed
+		if req.Completed != nil {
+			completed = *req.Completed
+		}
+		// Call the UpdateTodo method from the database layer, passing the todo ID, updated title, and completion status. If there is an error during the database operation, return an internal server error response. If successful, construct a responseTodo struct with the updated todo item and return it in the response.
+		todo, err := cfg.DB.UpdateTodo(c, database.UpdateTodoParams{
+			ID:        int32(id),
+			Title:     title,
+			Completed: completed,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Construct a responseTodo struct with the updated todo item and return it in the response.
+		response := responseTodo{
+			ID:        todo.ID,
+			UserID:    todo.UserID,
+			Title:     todo.Title,
+			Completed: todo.Completed,
+		}
+		// Return the updated todo item in the response with a status of 200 OK.
+		c.JSON(http.StatusOK, response)
+
+	}
+}

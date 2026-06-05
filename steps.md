@@ -156,7 +156,7 @@ git push origin gin_framework
 3.7 Register todo-related routes
  todoRoutes.DELETE("/:id", handlers.DeleteTodoHandler(cfg))
 
-## Integration test to create user
+## 9. Integration test to create user
 
 1. Set Gin to test mode to avoid unnecessary output during testing
 2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
@@ -169,3 +169,28 @@ git push origin gin_framework
 9. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
 10. Define a struct to unmarshal the JSON response payload, which contains a user object with fields for ID, email, created_at, and updated_at.
 11. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the email in the response matches the expected email, and that the ID, created_at, and updated_at fields are not empty. Finally, assert that all expectations set on the mock database were met.
+
+## 10. integration test login
+
+1. Set Gin to test mode to avoid unnecessary output during testing
+2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
+3. Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+4. Create a new Gin router and register the LoginUserHandler for the /auth/login route
+5. Set up the expected database interactions for the LoginUserHandler. When the handler executes a SELECT query to retrieve the user by email, it will return a row with the user's ID, email, hashed password, and timestamps for created_at and updated_at.
+6. Create a new sqlmock.Rows object with the expected columns and add a row with the generated user ID, email, hashed password, and timestamps for created_at and updated_at.
+7. Set up the expectation for the SELECT query to retrieve the user by email, with the specified email argument, and specify that it will return the row defined above.
+8. Create a new HTTP POST request to the /auth/login route with a JSON payload containing the email and password for the user. Set the Content-Type header to application/json.
+9. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
+10. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the token in the response is not empty. Finally, validate the JWT token using the provided JWT secret and assert that there are no errors during validation, and that the user ID extracted from the token matches the expected user ID. Finally, assert that all expectations set on the mock database were met.
+
+## 11. Integration test create todo
+
+1. Set Gin to test mode to avoid unnecessary output during testing
+2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
+3. Create a configuration struct with the mocked database connection and a JWT secret to be used in the handler
+4. Create a new Gin router and register the CreateTodoHandler for the /todos/ route, applying the AuthMiddleware to protect the route and require authentication.
+5. Set up the expected database interactions for the CreateTodoHandler. When the handler executes an INSERT INTO todos query with the specified title, completed status, and user ID arguments, it will return a row with the generated todo ID, title, timestamps for created_at and updated_at, completed status, and user ID. To simulate an authenticated request, we generate a JWT token for a test user ID using the provided JWT secret and a short expiration time.
+6. Create a new HTTP POST request to the /todos/ route with a JSON payload containing the title and completed status for the new todo. Set the Content-Type header to application/json and include the Authorization header with the Bearer token for authentication.
+7. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
+8. Define a struct to unmarshal the JSON response payload, which contains fields for ID, user_id, title, and completed status of the created todo.
+9. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the fields in the response match the expected values for the created todo, including the ID, user ID, title, and completed status. Finally, assert that all expectations set on the mock database were met.

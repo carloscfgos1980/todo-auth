@@ -214,7 +214,9 @@ func UpdateTodoHandler(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// DeleteTodoHandler handles the deletion of a specific todo item by its ID. It retrieves the user ID from the context, extracts the todo ID from the URL parameters, and calls the DeleteTodo method from the database layer to delete the todo item. If the todo item is found and belongs to the authenticated user, it deletes the item and returns a success message in the response; otherwise, it returns an appropriate error message (e.g., not found, unauthorized, or forbidden).
 func DeleteTodoHandler(cfg *config.Config) gin.HandlerFunc {
+	// returns a Gin handler function that processes the deletion of a specific todo item by its ID.
 	return func(c *gin.Context) {
 		// Retrieve the user ID from the context, which is set by the authentication middleware. If the user ID is not found, return an unauthorized error response.
 		userID, exists := c.Get("userID")
@@ -249,6 +251,7 @@ func DeleteTodoHandler(cfg *config.Config) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		// Return a success message in the response with a status of 200 OK.
 		c.JSON(http.StatusOK, gin.H{"message": "Todo deleted successfully"})
 	}
 }

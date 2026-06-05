@@ -58,3 +58,20 @@ git push origin gin_framework
 6.7 Return the created user as a response, excluding the password
 7. Register user-related routes
  router.POST("/auth/register", handlers.CreateUserHandler(cfg))
+
+## 3. Login
+
+1. Create queries to get hte user by email and by id
+2. sqlc generate to create Go code
+3. LoginUserHandler is the handler for logging in a user and generating a JWT token
+3.1 Define a struct for the response that will be sent back to the client after successful login
+3.2 Return a handler function that can be used in the Gin router
+3.3 Bind the JSON request body to the UserRequest struct
+3.4 Validate email format
+3.5 Retrieve the user from the database using the provided email
+3.6 Check if the provided password matches the stored hashed password
+3.7 Generate a JWT token for the authenticated user
+3.8 Create the response struct with the generated token
+3.9 Send the response back to the client with a 200 OK status
+4. Register user-related routes
+ router.POST("/auth/login", handlers.LoginUserHandler(cfg))

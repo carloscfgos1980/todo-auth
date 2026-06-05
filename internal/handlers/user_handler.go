@@ -74,3 +74,54 @@ func CreateUserHandler(cfg *config.Config) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"user": response})
 	}
 }
+
+// LoginUserHandler is the handler for logging in a user and generating a JWT token
+func LoginUserHandler(cfg *config.Config) gin.HandlerFunc {
+	// Define a struct for the response that will be sent back to the client after successful login
+	type response struct {
+		Token string `json:"token"`
+	}
+	// Return a handler function that can be used in the Gin router
+	return func(c *gin.Context) {
+		// Bind the JSON request body to the UserRequest struct
+		var req UserRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		// Validate email format
+		if err := utils.IsValidEmail(req.Email); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		// Retrieve the user from the database using the provided email
+		user, err := cfg.DB.GetUserByEmail(c, req.Email)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+			return
+		}
+		// Check if the provided password matches the stored hashed password
+		match, err := utils.CheckPasswordHash(req.Password, user.Password)
+		if err != nil || !match {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+			return
+		}
+		// Generate a JWT token for the authenticated user
+		token, err := utils.MakeJWT(
+			user.ID,
+			cfg.JWTSecret,
+			24*7*time.Hour,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+			return
+		}
+		// Create the response struct with the generated token
+		response := response{
+			Token: token,
+		}
+
+		// Send the response back to the client with a 200 OK status
+		c.JSON(http.StatusOK, response)
+	}
+}

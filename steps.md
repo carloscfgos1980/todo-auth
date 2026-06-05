@@ -14,6 +14,8 @@ go get github.com/gin-gonic/gin
 go get github.com/google/uuid
 go get github.com/alexedwards/argon2id
 go get github.com/golang-jwt/jwt/v5
+go get github.com/DATA-DOG/go-sqlmock
+go get github.com/stretchr/testify/assert@v1.11.1
 
 Copy config directory from previous version
 
@@ -153,3 +155,17 @@ git push origin gin_framework
 3.6 Return a success message in the response with a status of 200 OK.
 3.7 Register todo-related routes
  todoRoutes.DELETE("/:id", handlers.DeleteTodoHandler(cfg))
+
+## Integration test to create user
+
+1. Set Gin to test mode to avoid unnecessary output during testing
+2. Create a new sqlmock database connection and a mock object to set expectations on database interactions
+3. Create a configuration struct with the mocked database connection to be used in the handler
+4. Create a new Gin router and register the CreateUserHandler for the /auth/register route
+5. Set up the expected database interactions for the CreateUserHandler. When the handler executes an INSERT INTO users query with the specified email and any password argument, it will return a row with the generated user ID, email, hashed password, and timestamps for created_at and updated_at.
+6. Create a new sqlmock.Rows object with the expected columns and add a row with the generated user ID, email, hashed password, and timestamps for created_at and updated_at.
+7. Set up the expectation for the INSERT INTO users query with the specified email and any password argument, and specify that it will return the row defined above.
+8. Create a new HTTP POST request to the /auth/register route with a JSON payload containing the email and password for the new user. Set the Content-Type header to application/json.
+9. Assert that the response status code is 200 OK and print the response body for debugging purposes if the assertion fails.
+10. Define a struct to unmarshal the JSON response payload, which contains a user object with fields for ID, email, created_at, and updated_at.
+11. Unmarshal the JSON response body into the defined struct and assert that there are no errors during unmarshaling. Then, assert that the email in the response matches the expected email, and that the ID, created_at, and updated_at fields are not empty. Finally, assert that all expectations set on the mock database were met.

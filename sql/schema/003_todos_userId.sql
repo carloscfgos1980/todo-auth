@@ -1,0 +1,9 @@
+-- +goose Up
+ALTER TABLE todos 
+ADD COLUMN user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE todos
+Add CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+-- +goose Down
+ALTER TABLE todos
+DROP COLUMN user_id;

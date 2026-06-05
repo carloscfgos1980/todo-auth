@@ -1,0 +1,43 @@
+package main
+
+import (
+	"database/sql"
+	"log"
+
+	"github.com/carloscfgos1980/todo-auth/internal/config"
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
+)
+
+func main() {
+	// Load configuration from environment variables
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
+
+	// Connect to the database
+	dbConn, err := sql.Open("postgres", cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("Error opening database: %s", err)
+	}
+	defer dbConn.Close()
+	// Initialize the Gin router
+	var router *gin.Engine = gin.Default()
+
+	// Set trusted proxies to nil to avoid warnings in Gin 1.7+
+	router.SetTrustedProxies(nil)
+
+	// Define a simple health check route
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message":  "Todo API is running",
+			"status":   "success",
+			"database": "connected",
+		})
+	})
+	// Start the server on the specified port
+	if err := router.Run(":" + cfg.Port); err != nil {
+		log.Fatalf("Error starting server: %v", err)
+	}
+}

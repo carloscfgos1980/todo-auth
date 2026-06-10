@@ -12,6 +12,7 @@ github.com/jackc/pgx/v5
 github.com/alexedwards/argon2id
 github.com/golang-jwt/jwt/v5
 github.com/google/uuid
+github.com/stretchr/testify/assert
 
 3. Copy files from previous version: .env, .gitignore and yaml 
 4. Copy "sql" directory from previous version

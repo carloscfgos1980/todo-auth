@@ -1,0 +1,121 @@
+package auth
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestIsValidEmail(t *testing.T) {
+	tests := []struct {
+		name        string
+		email       string
+		expectError bool
+	}{
+		{"valid email", "test@example.com", false},
+		{"invalid email", "invalid-email", true},
+		{"empty email", "", true},
+		{"invalid format 1", "test@.com", true},
+		{"invalid format 2", "@example.com", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := IsValidEmail(tt.email)
+			assert.Equal(t, tt.expectError, err != nil, "IsValidEmail(%q) error presence should be %v, got err=%v", tt.email, tt.expectError, err)
+
+		})
+	}
+}
+
+func TestIsStrongPassword(t *testing.T) {
+	tests := []struct {
+		name        string
+		password    string
+		expectError bool
+	}{
+		{"valid password", "StrongP@ssw0rd", false},
+		{"too short", "S@1a", true},
+		{"no uppercase", "weakp@ssw0rd", true},
+		{"no lowercase", "WEAKP@SSW0RD", true},
+		{"no number", "WeakP@ssword", true},
+		{"no special char", "WeakPassw0rd", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := IsStrongPassword(tt.password)
+			assert.Equal(t, tt.expectError, err != nil, "IsStrongPassword(%q) error presence should be %v, got err=%v", tt.password, tt.expectError, err)
+		})
+	}
+}
+
+func TestCheckPriority(t *testing.T) {
+	tests := []struct {
+		name        string
+		priority    string
+		expectError error
+	}{
+		{"valid priority", "high", nil},
+		{"valid urgent priority", "urgent", nil},
+		{"invalid priority", "critical", fmt.Errorf("Invalid priority value: %s", "critical")},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := CheckPriority(tt.priority)
+			if tt.expectError != nil {
+				assert.EqualError(t, err, tt.expectError.Error(), "CheckPriority(%q) error should be %v, got %v", tt.priority, tt.expectError, err)
+			} else {
+				assert.NoError(t, err, "CheckPriority(%q) error should be nil, got %v", tt.priority, err)
+			}
+		})
+	}
+}
+
+func TestCheckState(t *testing.T) {
+	tests := []struct {
+		name        string
+		state       string
+		expectError error
+	}{
+		{"valid state", "in progress", nil},
+		{"invalid state", "completed", fmt.Errorf("Invalid state value: %s", "completed")},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := CheckState(tt.state)
+			if tt.expectError != nil {
+				assert.EqualError(t, err, tt.expectError.Error(), "CheckState(%q) error should be %v, got %v", tt.state, tt.expectError, err)
+			} else {
+				assert.NoError(t, err, "CheckState(%q) error should be nil, got %v", tt.state, err)
+			}
+		})
+	}
+}
+
+func TestCheckTag(t *testing.T) {
+	tests := []struct {
+		name        string
+		tag         string
+		expectError error
+	}{
+		{"valid private tag", "private", nil},
+		{"valid collaborative tag", "collaborative", nil},
+		{"valid public tag", "public", nil},
+		{"invalid tag", "shared", fmt.Errorf("Invalid tag value: %s", "shared")},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := CheckTag(tt.tag)
+			if tt.expectError != nil {
+				assert.EqualError(t, err, tt.expectError.Error(), "CheckTag(%q) error should be %v, got %v", tt.tag, tt.expectError, err)
+			} else {
+				assert.NoError(t, err, "CheckTag(%q) error should be nil, got %v", tt.tag, err)
+			}
+		})
+	}
+}

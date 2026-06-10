@@ -56,6 +56,8 @@ func main() {
 	mux := http.NewServeMux()
 	// health check endpoint
 	mux.HandleFunc("/health", apiCfg.handlerHealth)
+	// user creation endpoint
+	mux.HandleFunc("/auth/register", apiCfg.handlerUsersCreate)
 
 	log.Printf("Starting server on port %s", apiCfg.port)
 	// Start the HTTP server

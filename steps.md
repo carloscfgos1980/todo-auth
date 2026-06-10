@@ -105,3 +105,17 @@ git push origin no_framework
 
 2. todo get endpoint
  mux.HandleFunc("GET /todos", apiCfg.createTodosGetHandler)
+
+## 6. Get todo by Id
+
+1. handlerTodoByID handles the GET /todos/{todoID} endpoint to retrieve a specific todo by its ID for the authenticated user.
+1.1 Validate the user's authorization to get the todo by ID by checking the provided JWT token
+1.2 Validate the JWT token and extract the user ID from it
+1.3 Get the todo ID from the URL parameters and validate it
+1.4 Convert the todo ID from string to integer
+1.5 Get the todo associated with the user's ID and the provided todo ID from the database and return it in the response
+1.6 Check if the todo belongs to the authenticated user
+1.7 Convert the todo to the response format and return it in the response
+1.8 Return the todo in the response
+1.9 todo get by ID endpoint
+ mux.HandleFunc("GET /todos/{todoID}", apiCfg.handlerTodoByID)

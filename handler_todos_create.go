@@ -19,8 +19,8 @@ type responseTodo struct {
 	Completed bool      `json:"completed"`
 }
 
-// createTodoHandler handles requests to create a new task. It validates the user's authorization using a JWT token, checks the provided parameters for creating a new task, and creates the task in the database if everything is valid.
-func (cfg *apiConfig) createTodoHandler(w http.ResponseWriter, r *http.Request) {
+// handlerCreateTodo handles requests to create a new task. It validates the user's authorization using a JWT token, checks the provided parameters for creating a new task, and creates the task in the database if everything is valid.
+func (cfg *apiConfig) handlerCreateTodo(w http.ResponseWriter, r *http.Request) {
 	// Define the expected parameters for creating a new task
 	type parameters struct {
 		Title     string `json:"title"`

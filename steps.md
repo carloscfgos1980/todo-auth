@@ -62,3 +62,17 @@ git push origin no_framework
 
 4. user creation endpoint
  mux.HandleFunc("/auth/register", apiCfg.handlerUsersCreate)
+
+## 3. Login
+
+1. handlerLogin handles user login requests. It expects a JSON body with the user's email and password, verifies the credentials, and returns a JWT token if the login is successful.
+1.1 Define the expected parameters for user login
+1.2 Define the response structure
+1.3 Decode the JSON request body into the parameters struct
+1.4 Retrieve the user from the database using the provided email address
+1.5 Check if the provided password matches the hashed password stored in the database for the retrieved user
+1.6 If the password is correct, generate a JWT token for the user to authenticate future requests
+1.7 Respond with the generated JWT token
+
+2. user login endpoint
+ mux.HandleFunc("/auth/login", apiCfg.handlerLogin)

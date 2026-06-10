@@ -58,6 +58,8 @@ func main() {
 	mux.HandleFunc("/health", apiCfg.handlerHealth)
 	// user creation endpoint
 	mux.HandleFunc("/auth/register", apiCfg.handlerUsersCreate)
+	// user login endpoint
+	mux.HandleFunc("/auth/login", apiCfg.handlerLogin)
 
 	log.Printf("Starting server on port %s", apiCfg.port)
 	// Start the HTTP server

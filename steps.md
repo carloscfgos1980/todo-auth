@@ -139,3 +139,18 @@ git push origin no_framework
 
 2. todo update endpoint
  mux.HandleFunc("PUT /todos/{todoID}", apiCfg.handlerTodoUpdate)
+
+## 8. Delete todo
+
+1. handlerTodoDelete handles the endpoint for deleting a specific todo item. It validates the user's authorization using JWT tokens, checks if the authenticated user is the owner of the todo, and deletes the todo from the database if all checks pass.
+1.1 Validate the user's authorization to delete the todo by checking the provided JWT token
+1.2 Validate the JWT token and extract the user ID from it
+1.3 Get the todo ID from the URL parameters and validate it
+1.4 Convert the todo ID from string to integer
+1.5 Get the existing todo from the database to check if it exists and if the authenticated user is the owner of the todo
+1.6 Check if the authenticated user is the owner of the todo
+1.7 Delete the todo from the database using the authenticated user's ID and the todo ID
+1.8 Return a success response indicating that the todo was deleted successfully
+
+2. todo delete endpoint
+ mux.HandleFunc("DELETE /todos/{todoID}", apiCfg.handlerTodoDelete)

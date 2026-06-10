@@ -41,6 +41,7 @@ func (cfg *apiConfig) handlerTodoUpdate(w http.ResponseWriter, r *http.Request) 
 		Title     *string `json:"title"`
 		Completed *bool   `json:"completed"`
 	}
+	// Decode the request body into the parameters struct
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err = decoder.Decode(&params)
@@ -48,7 +49,12 @@ func (cfg *apiConfig) handlerTodoUpdate(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
-
+	// Check if at least one of the parameters is provided
+	if params.Title == nil && params.Completed == nil {
+		respondWithError(w, http.StatusBadRequest, "At least one parameter (title or completed) must be provided", fmt.Errorf("at least one parameter (title or completed) must be provided"))
+		return
+	}
+	// Get the existing todo from the database to check if it exists and if the authenticated user is the owner of the todo
 	dbTodo, err := cfg.db.GetTodoByID(r.Context(), int32(todoID))
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -58,6 +64,7 @@ func (cfg *apiConfig) handlerTodoUpdate(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusInternalServerError, "Error getting todo", err)
 		return
 	}
+	// Check if the authenticated user is the owner of the todo
 	if dbTodo.UserID != userID {
 		respondWithError(w, http.StatusForbidden, "You don't have permission to update this todo", fmt.Errorf("you don't have permission to update this todo"))
 		return

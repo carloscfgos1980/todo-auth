@@ -161,4 +161,28 @@ git push origin chi_framework
   // set up the todos routes
   r.Post("/todos", todoHandler.CreateTodo)
 
-  
+## 6. Get todos
+
+1. GetTodos retrieves all todo items for a given user ID from the database
+2. Add GetTodos method to service interface
+3. GetTodos handles the HTTP request for retrieving all todo items for the authenticated user
+3.1 Get the user ID from the request context (set by the authentication middleware)
+3.2 Check if the user ID is present in the context
+3.3 The auth middleware stores the JWT subject as a UUID in the request context.
+3.4 convert the user ID to pgtype.UUID
+3.5 Check if the user exists in the database
+3.6 Call the service to get all todo items for the authenticated user
+3.7 Create a slice of ResponseTodo to send back to the client
+3.8 Write the todos as JSON with a 200 OK status code
+4.  protected routes
+ r.Route("/api", func(r chi.Router) {
+  // Add authentication middleware here if available
+  r.Use(func(next http.Handler) http.Handler {
+   return authmiddleware.AuthMiddleware(next, app.config.JWTSecret)
+  })
+  // create the todo service and handler
+  todoService := todos.NewService(database.New(app.db), app.db)
+  todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
+  // set up the todos routes
+
+  r.Get("/todos", todoHandler.GetTodos)

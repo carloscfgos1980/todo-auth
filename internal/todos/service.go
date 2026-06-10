@@ -12,6 +12,7 @@ import (
 type Service interface {
 	CreateTodo(ctx context.Context, todo database.CreateTodoParams) (*database.Todo, error)
 	GetUserByID(ctx context.Context, id string) (*database.User, error)
+	GetTodos(ctx context.Context, userID pgtype.UUID) ([]database.Todo, error)
 }
 
 // svc defines the struct for the users service
@@ -80,4 +81,26 @@ func (s *svc) CreateTodo(ctx context.Context, todo database.CreateTodoParams) (*
 	}
 	// return the created todo
 	return &createdTodo, nil
+}
+
+// GetTodos retrieves all todo items for a given user ID from the database
+func (s *svc) GetTodos(ctx context.Context, userID pgtype.UUID) ([]database.Todo, error) {
+	// start a transaction
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+	// create a new Queries instance with the transaction
+	qtx := s.repo.WithTx(tx)
+	// get the todos for the user
+	todos, err := qtx.GetTodosByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	// commit the transaction
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return todos, nil
 }

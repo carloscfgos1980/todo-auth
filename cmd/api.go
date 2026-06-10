@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/carloscfgos1980/todo-auth/internal/database"
+	"github.com/carloscfgos1980/todo-auth/internal/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
@@ -45,6 +47,15 @@ func (app *application) mount() http.Handler {
 	// health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("all good for now"))
+	})
+	// users endpoints
+	// create the user service and handler
+	userService := users.NewService(database.New(app.db), app.db)
+	userHandler := users.NewHandler(userService, app.config.JWTSecret)
+	// set up the users routes
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/register", userHandler.CreateUser)
+		// r.Post("/login", userHandler.LoginUser)
 	})
 	// return the router
 	return r

@@ -39,3 +39,48 @@ github.com/google/uuid
 10.7 database connection
 10.8 reate the application
 10.9 run the application
+11. GitHub
+
+```bash
+git init
+git add .
+git commit -m "set up"
+git remote add origin https://github.com/carloscfgos1980/todo-auth.git
+git checkout -b chi_framework
+git push origin chi_framework
+```
+
+## 2. Register user
+
+1. types
+1.1 structs and handler for creating a new user in the system
+1.2 UserRequest is the struct for the request body when creating a new user
+1.3 LoginResponse is the response body when logging in a user.
+2. service set up
+2.1 Service defines the interface for the users service
+2.2 svc defines the struct for the users service
+2.3 NewService creates a new service for the users package
+3. CreateUser creates a new user in the database
+4. Add create user method to service interface
+5. Handler setup
+5.1 handler is the HTTP handler for users endpoints
+5.2 NewHandler creates a new handler for users endpoints
+6. CreateUser handles the HTTP request for creating a new user
+6.1 Parse the JSON request body into a UserRequest struct
+6.2 Check if any field is empty
+6.3 Validate email format
+6.4 Validate the password strength
+6.5 Hash the password before storing it in the database
+6.6 Update the user request with the hashed password
+6.7 Call the service to create the user
+6.7.1 Check if the error is a unique constraint violation (duplicate email)
+6.8 Create a response struct to send back to the client, excluding the password
+6.9 Write the response as JSON with a 201 Created status code
+7. users endpoints
+ userService := users.NewService(database.New(app.db), app.db)
+ userHandler := users.NewHandler(userService, app.config.JWTSecret)
+ // set up the users routes
+ r.Route("/auth", func(r chi.Router) {
+  r.Post("/register", userHandler.CreateUser)
+  // r.Post("/login", userHandler.LoginUser)
+ })

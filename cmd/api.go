@@ -7,6 +7,7 @@ import (
 
 	"github.com/carloscfgos1980/todo-auth/internal/authmiddleware"
 	"github.com/carloscfgos1980/todo-auth/internal/database"
+	"github.com/carloscfgos1980/todo-auth/internal/metrics"
 	"github.com/carloscfgos1980/todo-auth/internal/todos"
 	"github.com/carloscfgos1980/todo-auth/internal/users"
 	"github.com/go-chi/chi/v5"
@@ -16,8 +17,9 @@ import (
 
 // application is the main application struct that holds the configuration and database connection
 type application struct {
-	config config
-	db     *pgx.Conn
+	config  config
+	db      *pgx.Conn
+	metrics *metrics.Metrics
 }
 
 // config holds the configuration for the application
@@ -46,6 +48,16 @@ func (app *application) mount() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	// Initialize metrics
+	m := metrics.NewMetrics()
+	app.metrics = m
+
+	// Add metrics middleware
+	r.Use(metrics.MetricsMiddleware(m))
+
+	// metrics endpoint
+	r.Handle("/metrics", metrics.Handler())
+
 	// health check endpoint
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("all good for now"))
@@ -67,7 +79,7 @@ func (app *application) mount() http.Handler {
 		})
 		// create the todo service and handler
 		todoService := todos.NewService(database.New(app.db), app.db)
-		todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
+		todoHandler := todos.NewHandler(todoService, app.config.JWTSecret, m)
 		// set up the todos routes
 		r.Post("/todos", todoHandler.CreateTodo)
 		r.Get("/todos/{todoID}", todoHandler.GetTodoByID)

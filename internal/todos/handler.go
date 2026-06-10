@@ -8,6 +8,7 @@ import (
 
 	"github.com/carloscfgos1980/todo-auth/internal/database"
 	"github.com/carloscfgos1980/todo-auth/internal/json"
+	"github.com/carloscfgos1980/todo-auth/internal/metrics"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -18,13 +19,15 @@ import (
 type handler struct {
 	service   Service
 	jwtSecret string
+	metrics   *metrics.Metrics
 }
 
 // NewHandler creates a new handler for users endpoints
-func NewHandler(service Service, jwtSecret string) *handler {
+func NewHandler(service Service, jwtSecret string, m *metrics.Metrics) *handler {
 	return &handler{
 		service:   service,
 		jwtSecret: jwtSecret,
+		metrics:   m,
 	}
 }
 
@@ -89,6 +92,10 @@ func (h *handler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		Title:     createdTodo.Title,
 		Completed: createdTodo.Completed,
 	}
+	// Increment the todos created metric
+	if h.metrics != nil {
+		h.metrics.IncrementTodosCreated()
+	}
 	// Write the created todo item as JSON with a 201 Created status code
 	if err := json.WriteJSON(w, http.StatusCreated, response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -139,6 +146,10 @@ func (h *handler) GetTodos(w http.ResponseWriter, r *http.Request) {
 			Title:     todo.Title,
 			Completed: todo.Completed,
 		}
+	}
+	// Increment the todos fetched metric
+	if h.metrics != nil {
+		h.metrics.IncrementTodosFetched()
 	}
 	// Write the todos as JSON with a 200 OK status code
 	if err := json.WriteJSON(w, http.StatusOK, response); err != nil {
@@ -204,6 +215,10 @@ func (h *handler) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 		UserID:    todo.UserID,
 		Title:     todo.Title,
 		Completed: todo.Completed,
+	}
+	// Increment the todos fetched metric
+	if h.metrics != nil {
+		h.metrics.IncrementTodosFetched()
 	}
 	// Write the todo item as JSON with a 200 OK status code
 	if err := json.WriteJSON(w, http.StatusOK, response); err != nil {
@@ -296,6 +311,10 @@ func (h *handler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 		Title:     updatedTodo.Title,
 		Completed: updatedTodo.Completed,
 	}
+	// Increment the todos updated metric
+	if h.metrics != nil {
+		h.metrics.IncrementTodosUpdated()
+	}
 	// Write the updated todo item as JSON with a 200 OK status code
 	if err := json.WriteJSON(w, http.StatusOK, response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -358,6 +377,10 @@ func (h *handler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	// Increment the todos deleted metric
+	if h.metrics != nil {
+		h.metrics.IncrementTodosDeleted()
 	}
 	// Write a 200 OK status code to indicate successful deletion
 	if err := json.WriteJSON(w, http.StatusOK, map[string]string{"message": "Todo item deleted successfully"}); err != nil {

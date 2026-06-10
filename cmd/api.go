@@ -73,7 +73,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/todos/{todoID}", todoHandler.GetTodoByID)
 		r.Get("/todos", todoHandler.GetTodos)
 		r.Put("/todos/{todoID}", todoHandler.UpdateTodo)
-		// r.Delete("/todos/{todoID}", todoHandler.DeleteTodo)
+		r.Delete("/todos/{todoID}", todoHandler.DeleteTodo)
 
 	})
 	// return the router

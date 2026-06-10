@@ -239,3 +239,28 @@ git push origin chi_framework
   todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
 
   r.Put("/todos/{todoID}", todoHandler.UpdateTodo)
+
+## 9. DeleteTodo deletes a todo item from the database by its ID
+
+1. DeleteTodo deletes a todo item from the database by its ID
+2. Add DeleteTodo to service interface
+3. DeleteTodo handles the HTTP request for deleting a specific todo item by its ID for the authenticated user
+3.1 Get the user ID from the request context (set by the authentication middleware)
+3.2 Check if the user ID is present in the context
+3.3 The auth middleware stores the JWT subject as a UUID in the request context.
+3.4 Check if the user exists in the database
+3.5 Get the todo ID from the URL parameters
+3.6 Convert the todo ID from string to int
+3.7 get the existing todo item from the database to check if it belongs to the authenticated user
+3.8 check if the todo item belongs to the authenticated user
+3.9 Call the service to delete the todo item
+3.10 Write a 200 OK status code to indicate successful deletion
+4. protected routes
+ r.Route("/api", func(r chi.Router) {
+  // Add authentication middleware here if available
+  r.Use(func(next http.Handler) http.Handler {
+   return authmiddleware.AuthMiddleware(next, app.config.JWTSecret)
+  })
+
+  r.Delete("/todos/{todoID}", todoHandler.DeleteTodo)
+ })

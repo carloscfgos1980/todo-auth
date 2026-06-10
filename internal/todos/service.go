@@ -15,6 +15,7 @@ type Service interface {
 	GetTodos(ctx context.Context, userID pgtype.UUID) ([]database.Todo, error)
 	GetTodoByID(ctx context.Context, id int32) (*database.Todo, error)
 	UpdateTodo(ctx context.Context, todo database.UpdateTodoParams) (*database.Todo, error)
+	DeleteTodo(ctx context.Context, id int32) error
 }
 
 // svc defines the struct for the users service
@@ -153,4 +154,26 @@ func (s *svc) UpdateTodo(ctx context.Context, todo database.UpdateTodoParams) (*
 		return nil, err
 	}
 	return &updatedTodo, nil
+}
+
+// DeleteTodo deletes a todo item from the database by its ID
+func (s *svc) DeleteTodo(ctx context.Context, id int32) error {
+	// start a transaction
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	// create a new Queries instance with the transaction
+	qtx := s.repo.WithTx(tx)
+	// delete the todo item
+	err = qtx.DeleteTodo(ctx, id)
+	if err != nil {
+		return err
+	}
+	// commit the transaction
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	return nil
 }

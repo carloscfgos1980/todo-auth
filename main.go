@@ -63,6 +63,8 @@ func main() {
 
 	// todo creation endpoint
 	mux.HandleFunc("POST /todos", apiCfg.createTodoHandler)
+	// todo get endpoint
+	mux.HandleFunc("GET /todos", apiCfg.createTodosGetHandler)
 
 	log.Printf("Starting server on port %s", apiCfg.port)
 	// Start the HTTP server

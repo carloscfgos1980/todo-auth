@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/carloscfgos1980/todo-auth/internal/authmiddleware"
 	"github.com/carloscfgos1980/todo-auth/internal/database"
+	"github.com/carloscfgos1980/todo-auth/internal/todos"
 	"github.com/carloscfgos1980/todo-auth/internal/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -56,6 +58,24 @@ func (app *application) mount() http.Handler {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", userHandler.CreateUser)
 		r.Post("/login", userHandler.LoginUser)
+	})
+	// protected routes
+	r.Route("/api", func(r chi.Router) {
+		// Add authentication middleware here if available
+		r.Use(func(next http.Handler) http.Handler {
+			return authmiddleware.AuthMiddleware(next, app.config.JWTSecret)
+		})
+		// create the todo service and handler
+		todoService := todos.NewService(database.New(app.db), app.db)
+		todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
+		// set up the todos routes
+		r.Post("/todos", todoHandler.CreateTodo)
+		// r.Get("/todos/{todoID}", todoHandler.GetTodoByID)
+		// r.Get("/todos", todoHandler.GetTodos)
+		// r.Get("/todos/collaborative", todoHandler.GetParentsCollaborativeTodos)
+		// r.Put("/todos/{todoID}", todoHandler.UpdateTodo)
+		// r.Delete("/todos/{todoID}", todoHandler.DeleteTodo)
+
 	})
 	// return the router
 	return r

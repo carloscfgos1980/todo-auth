@@ -84,3 +84,81 @@ git push origin chi_framework
   r.Post("/register", userHandler.CreateUser)
   // r.Post("/login", userHandler.LoginUser)
  })
+
+## 3. Login
+
+1. Service
+1.1 GetUserByEmail gets a user from the database by email
+1.2 Add GetUserByEmail
+ to service interface
+2. LoginUser handles the HTTP request for logging in a user
+2.1 Parse the JSON request body into a UserRequest struct
+2.2 Check if email and password are provided
+2.3 Get the user by email from the database
+2.4 Check if the provided password matches the stored hashed password
+2.5 Generate a JWT token for the authenticated user
+2.6 Create a response struct to send back to the client with the access token
+2.7 Write the response as JSON with a 200 OK status code
+3. users endpoints
+ // create the user service and handler
+ userService := users.NewService(database.New(app.db), app.db)
+ userHandler := users.NewHandler(userService, app.config.JWTSecret)
+ // set up the users routes
+ r.Route("/auth", func(r chi.Router) {
+  r.Post("/register", userHandler.CreateUser)
+  r.Post("/login", userHandler.LoginUser)
+ })
+
+## 4. Auth middleware
+
+1. HTTP middleware setting a value on the request context
+1.1 Return a new http.HandlerFunc that wraps the original handler and adds the authentication logic
+1.2 Extract the token from the Authorization header
+1.3 Validate the token and extract the user ID
+1.4 Create a new context with the user ID value
+1.5 Call the next handler with the new context
+2. protected routes
+ r.Route("/api", func(r chi.Router) {
+  // Add authentication middleware here if available
+  r.Use(func(next http.Handler) http.Handler {
+   return authmiddleware.AuthMiddleware(next, app.config.JWTSecret)
+  })
+
+## 5. Create todo
+
+1. Types
+1.1 CreateTodoRequest represents the expected JSON payload for creating a new todo item. It includes the title of the todo and its completion status.
+1.2 ResponseTodo represents the structure of a todo item that will be sent back in the response. It includes the ID, user ID, title, and completion status of the todo item.
+2. service set up
+2.1 Service defines the interface for the users service
+2.2 svc defines the struct for the users service
+2.3 NewService creates a new service for the users package
+3. GetUserByID retrieves a user by their ID from the database
+4. CreateTodo creates a new todo item in the database
+5. Add GetUserByID and CreateTodo to service interface
+6. Setup handler
+6.1 andler is the HTTP handler for users endpoints
+6.2 NewHandler creates a new handler for users endpoints
+7. CreateTodo handles the HTTP request for creating a new todo item
+7.1 Get the user ID from the request context (set by the authentication middleware)
+7.2 The auth middleware stores the JWT subject as a UUID in the request context.
+7.3 Check if the user exists in the database
+7.4 Parse the JSON request body into a CreateUpdateTodoRequest struct
+7.5 validate the request data
+7.6 Create a CreateTodoParams struct to pass to the service layer
+7.7 Call the service to create the todo item
+7.8 Create a ResponseTodo struct to send back to the client
+7.9 Write the created todo item as JSON with a 201 Created status code
+8. protected routes
+ r.Route("/api", func(r chi.Router) {
+  // Add authentication middleware here if available
+  r.Use(func(next http.Handler) http.Handler {
+   return authmiddleware.AuthMiddleware(next, app.config.JWTSecret)
+  })
+  // create the todo service and handler
+  todoService := todos.NewService(database.New(app.db), app.db)
+  todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
+  // set up the todos routes
+  r.Post("/todos", todoHandler.CreateTodo)
+
+  

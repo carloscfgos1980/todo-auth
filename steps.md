@@ -212,6 +212,30 @@ git push origin chi_framework
   // create the todo service and handler
   todoService := todos.NewService(database.New(app.db), app.db)
   todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
-  
+
   r.Get("/todos/{todoID}", todoHandler.GetTodoByID)
 
+## 8. Update todo
+
+1. UpdateTodo updates a todo item in the database
+2. Add UpdateTodo to service interface
+3. UpdateTodo handles the HTTP request for updating a specific todo item by its ID for the authenticated user
+3.1 Get the user ID from the request context (set by the authentication middleware)
+3.2 Check if the user ID is present in the context
+3.3 The auth middleware stores the JWT subject as a UUID in the request context.
+3.4 Check if the user exists in the database
+3.5 Get the todo ID from the URL parameters
+3.6 Convert the todo ID from string to int
+3.7 Parse the JSON request body into a CreateUpdateTodoRequest struct
+3.8 get the existing todo item from the database to check if it belongs to the authenticated user and to get the current values of the fields
+3.9 check if the todo item belongs to the authenticated user
+3.10 Update the fields of the todo item based on the request data and the existing values in the database. If a field is not provided in the request, keep the existing value from the database.
+3.11 Create an UpdateTodoParams struct to pass to the service layer
+3.12 Call the service to update the todo item
+3.13 Create a ResponseTodo struct to send back to the client
+3.14 Write the updated todo item as JSON with a 200 OK status code
+4. create the todo service and handler
+  todoService := todos.NewService(database.New(app.db), app.db)
+  todoHandler := todos.NewHandler(todoService, app.config.JWTSecret)
+
+  r.Put("/todos/{todoID}", todoHandler.UpdateTodo)

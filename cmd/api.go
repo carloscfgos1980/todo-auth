@@ -72,8 +72,7 @@ func (app *application) mount() http.Handler {
 		r.Post("/todos", todoHandler.CreateTodo)
 		r.Get("/todos/{todoID}", todoHandler.GetTodoByID)
 		r.Get("/todos", todoHandler.GetTodos)
-		// r.Get("/todos/collaborative", todoHandler.GetParentsCollaborativeTodos)
-		// r.Put("/todos/{todoID}", todoHandler.UpdateTodo)
+		r.Put("/todos/{todoID}", todoHandler.UpdateTodo)
 		// r.Delete("/todos/{todoID}", todoHandler.DeleteTodo)
 
 	})

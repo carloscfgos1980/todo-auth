@@ -76,3 +76,20 @@ git push origin no_framework
 
 2. user login endpoint
  mux.HandleFunc("/auth/login", apiCfg.handlerLogin)
+
+## Create todo
+
+1. responseTodo is a struct that represents the JSON response for a created task. It includes the task's ID, user ID, title, and completion status.
+2. createTodoHandler handles requests to create a new task. It validates the user's authorization using a JWT token, checks the provided parameters for creating a new task, and creates the task in the database if everything is valid.
+2.1 Define the expected parameters for creating a new task
+2.2 Validate the user's authorization to create a new task by checking the provided JWT token
+2.3 Validate the JWT token and extract the user ID from it
+2.4 Decode the JSON request body into the parameters struct
+2.5 Validate the provided parameters for creating a new task (e.g., check if priority, state, tag, and date formats are valid)
+2.6 heck if the user is register in database
+2.7 If the parameters are valid and the user is authorized, create a new task in the database associated with the user's ID and the provided parameters
+2.8 Respond with the created task's information
+2.9 Respond with the created task's information in JSON format
+
+3. todo creation endpoint
+ mux.HandleFunc("POST /todos", apiCfg.createTodoHandler)

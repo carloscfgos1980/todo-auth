@@ -61,6 +61,9 @@ func main() {
 	// user login endpoint
 	mux.HandleFunc("/auth/login", apiCfg.handlerLogin)
 
+	// todo creation endpoint
+	mux.HandleFunc("POST /todos", apiCfg.createTodoHandler)
+
 	log.Printf("Starting server on port %s", apiCfg.port)
 	// Start the HTTP server
 	err = http.ListenAndServe(":"+apiCfg.port, mux)

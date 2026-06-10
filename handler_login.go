@@ -8,6 +8,7 @@ import (
 	"github.com/carloscfgos1980/todo-auth/internal/auth"
 )
 
+// handlerLogin handles user login requests. It expects a JSON body with the user's email and password, verifies the credentials, and returns a JWT token if the login is successful.
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	// Define the expected parameters for user login and the response structure
 	type parameters struct {

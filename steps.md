@@ -119,3 +119,23 @@ git push origin no_framework
 1.8 Return the todo in the response
 1.9 todo get by ID endpoint
  mux.HandleFunc("GET /todos/{todoID}", apiCfg.handlerTodoByID)
+
+## 7. Update todo
+
+1. handlerTodoUpdate handles the HTTP request for updating a todo item. It validates the user's authorization, checks the provided parameters, and updates the todo in the database if everything is valid.
+1.1 Validate the user's authorization to update the todo by checking the provided JWT token
+1.2 Validate the JWT token and extract the user ID from it
+1.3 Get the todo ID from the URL parameters and validate it
+1.4 Convert the todo ID from string to integer
+1.5 Get the updated todo information from the request body and validate it
+1.6 Decode the request body into the parameters struct
+1.7 Check if at least one of the parameters is provided
+1.8 Get the existing todo from the database to check if it exists and if the authenticated user is the owner of the todo
+1.9 Check if the authenticated user is the owner of the todo
+1.10 Update the todo fields with the provided parameters if they are not nil
+1.11 Update the todo in the database using the provided parameters and the authenticated user's ID
+1.12 Prepare the response with the updated todo's information
+1.13 Return the updated todo in the response
+
+2. todo update endpoint
+ mux.HandleFunc("PUT /todos/{todoID}", apiCfg.handlerTodoUpdate)

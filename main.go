@@ -67,6 +67,8 @@ func main() {
 	mux.HandleFunc("GET /todos", apiCfg.handlerTodosGet)
 	// todo get by ID endpoint
 	mux.HandleFunc("GET /todos/{todoID}", apiCfg.handlerTodoByID)
+	// todo update endpoint
+	mux.HandleFunc("PUT /todos/{todoID}", apiCfg.handlerTodoUpdate)
 
 	log.Printf("Starting server on port %s", apiCfg.port)
 	// Start the HTTP server

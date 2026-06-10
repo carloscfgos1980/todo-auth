@@ -154,3 +154,13 @@ git push origin no_framework
 
 2. todo delete endpoint
  mux.HandleFunc("DELETE /todos/{todoID}", apiCfg.handlerTodoDelete)
+
+## 9. Metrics
+
+1. metricsMiddleware increments request counters for every incoming HTTP request.
+2. handlerMetrics returns basic runtime metrics for the API process.
+3. Add startedAt  and requestsTotal to apiConfig struct
+4. metrics endpoint
+ mux.HandleFunc("GET /metrics", apiCfg.handlerMetrics)
+5. Start the HTTP server with the metrics middleware
+err = http.ListenAndServe(":"+apiCfg.port, apiCfg.metricsMiddleware(mux))

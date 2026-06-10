@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/carloscfgos1980/todo-auth/internal/database"
 
@@ -17,6 +18,8 @@ type apiConfig struct {
 	db        *database.Queries
 	jwtSecret string
 	port      string
+	startedAt time.Time
+	requestsTotal uint64
 }
 
 func main() {
@@ -51,11 +54,14 @@ func main() {
 		db:        dbQueries,
 		port:      port,
 		jwtSecret: jwtSecret,
+		startedAt: time.Now(),
 	}
 	// Set up the HTTP server and routes
 	mux := http.NewServeMux()
 	// health check endpoint
 	mux.HandleFunc("/health", apiCfg.handlerHealth)
+	// metrics endpoint
+	mux.HandleFunc("GET /metrics", apiCfg.handlerMetrics)
 	// user creation endpoint
 	mux.HandleFunc("/auth/register", apiCfg.handlerUsersCreate)
 	// user login endpoint
@@ -74,7 +80,7 @@ func main() {
 
 	log.Printf("Starting server on port %s", apiCfg.port)
 	// Start the HTTP server
-	err = http.ListenAndServe(":"+apiCfg.port, mux)
+	err = http.ListenAndServe(":"+apiCfg.port, apiCfg.metricsMiddleware(mux))
 	if err != nil {
 		log.Fatalf("Error starting server: %s", err)
 	}
